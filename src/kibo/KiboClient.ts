@@ -13,3 +13,4 @@ export const KiboClient = new Configuration({
   authHost: process.env.KIBO_API_HOST,
   apiEnv: 'sandbox',
 })
+

@@ -1,5 +1,6 @@
-import express, { Request, Response } from 'express';
+import express, { Request, response, Response } from 'express';
 import {  messaging } from './config/firebase';
+import { sendNotification } from './kibo/EventMap';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,36 +19,36 @@ app.get('/health', (req: Request, res: Response) => {
 // Event endpoint
 app.post('/event', async (req: Request, res: Response) => {
   try {
-    const eventData = req.body;
-    console.log('Received event:', eventData);
+    const event = req.body;
+    console.log('Received event:', event);
+    
+    const data = sendNotification(event)
 
-    // Store event in Firestore
-    // const docRef = await db.collection('events').add({
-    //   ...eventData,
-    //   timestamp: new Date()
-    // });
-
-    // If the event includes a notification, send it using Firebase Cloud Messaging
-
-    if (eventData.notification) {
+    if (event.notification) {
         
-      const message = {
-        notification: {
-          title: eventData.notification.title || 'New Notification',
-          body: eventData.notification.body || 'You have a new notification'
-        },
-        token: eventData.token || 'all' ,// You can specify topics or tokens
-        topic: eventData.topic || 'all' // You can specify topics or tokens
-      };
+      // const message = {
+      //   notification: {
+      //     title: eventData.notification.title || 'New Notification',
+      //     body: eventData.notification.body || 'You have a new notification'
+      //   },        
+      //   token: "eFw-Iu8wrkXLjmLUZEjme_:APA91bFrecwduHLfHBvMU8s_Os6ke5Tg5LsgzaRk4iu7Sy4k5g7geBsqe6gqwEZ6uOe7yLwOwItoyqF1Ss_8jvl7SRIB_K8GZTs-rB1K11VB1WlgPzZQB5s" ,// You can specify topics or tokens
+      //   //topic: eventData.topic || 'all' // You can specify topics or tokens
 
-      const response = await messaging.send(message,true);
-      console.log('Successfully sent notification:', response);
+      // };
+
+      //DEVICE ID -> KIBO. 
+      //KIBO -> One Time Migration => Device ID.
+      //KIBO -> Device ID -> FCM Token.
+
+
+      //const response = await messaging.send(message);
+      console.log('Successfully sent notification:', data);
     }
     
     res.status(200).json({
       message: 'Event received and processed successfully',
       eventId: "docRef.id",
-      data: eventData
+      data: data
     });
   } catch (error) {
     console.error('Error processing event:', error);
