@@ -11,13 +11,7 @@ if (!admin.apps.length) {
     credential: admin.credential.cert(serviceAccount),
   });
 }
-// Get auth token for Firebase Admin SDK
 
-
-
-
-
-//export const db = admin.firestore();
 export const messaging = admin.messaging();
 
 export default admin; 
