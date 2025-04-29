@@ -9,8 +9,9 @@ export const KiboClient = new Configuration({
   masterCatalog: process.env.KIBO_MASTER_CATALOG,
   sharedSecret: process.env.KIBO_SHARED_SECRET,
   clientId: process.env.KIBO_CLIENT_ID,
+  apiHost: process.env.KIBO_API_HOST,
   pciHost: '',
-  authHost: process.env.KIBO_API_HOST,
-  apiEnv: 'sandbox',
+  authHost: process.env.KIBO_AUTH_HOST,
+  apiEnv: process.env.KIBO_API_ENV,
 })
 
