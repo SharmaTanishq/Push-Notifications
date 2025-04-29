@@ -6,6 +6,8 @@ export const ORDER_SHIPPED = "order.shipped"
 export const READY_FOR_PICKUP = "READY_FOR_PICKUP"
 export const COMPLETED = "COMPLETED"
 export const ITEM_PICKUP = "Pickup"
+export const DIGITAL_GIFT_CARD_SKU_ID = "101544719"
+
 
 
 
