@@ -59,37 +59,39 @@ export const sendNotification = async (event: Event) => {
 
     let isReadyForPickup = false;
     let isCompleted = false;
+    let isBOPIS = false;
 
     if (event.extendedProperties) {
         orderId = event.extendedProperties.find(property => property.key === 'orderId')?.value || "";
         isReadyForPickup = !!event.extendedProperties.find(property => property.key === 'newState' && property.value === READY_FOR_PICKUP);
         isCompleted = !!event.extendedProperties.find(property => property.key === 'newState' && property.value === COMPLETED);
     }
-
     if (!orderId) {
         return null;
     }
-
     const orderDetails = await Order.getOrder(orderId);
-    const isBOPIS = orderDetails.items?.[0]?.fulfillmentMethod === ITEM_PICKUP
-    const customerAccountId = orderDetails.customerAccountId;
-    const customer = await Customer.getCustomer(customerAccountId!);
 
     if (event.topic === SHIPMENT_WORKFLOW_STATUS_CHANGED) {
-        const Shipment = await getShipmentDetailsById(event.entityId);
-        isGiftCard = Shipment?.items?.some((item: any) => item?.variationProductCode == DIGITAL_GIFT_CARD_SKU_ID)
-        console.log("isGiftCard", isGiftCard)
-        const updatedArray = mergeCancelledItems(Shipment?.items, orderDetails.items);
-        updatedArray?.filter((item: any) => {
-            if (item?.data?.['egifter-data']?.isPromotional === true) {
-                isGiftCard = true
-            }
-        });
+        await getShipmentDetailsById(event.entityId).then(response => {
+            isBOPIS = response?.shipmentType === "BOPIS";
+            isGiftCard = response?.items?.some((item: any) => item?.variationProductCode == DIGITAL_GIFT_CARD_SKU_ID)
+            console.log("isGiftCard", isGiftCard)
+            const updatedArray = mergeCancelledItems(response?.items, orderDetails.items);
+            updatedArray?.filter((item: any) => {
+                if (item?.data?.['egifter-data']?.isPromotional === true) {
+                    isGiftCard = true
+                }
+            });
+        })
     }
 
     if (isGiftCard) {
         return
     }
+
+    const customerAccountId = orderDetails.customerAccountId;
+    const customer = await Customer.getCustomer(customerAccountId!);
+
     const getdeviceId = () => {
         const deviceObjOrder: any = orderDetails?.attributes?.find(item => item.fullyQualifiedName?.toLowerCase() === ('Tenant~DeviceAppToken').toLowerCase());
         if (deviceObjOrder) {
