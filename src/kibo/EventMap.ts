@@ -1,6 +1,7 @@
 import { COMPLETED, DIGITAL_GIFT_CARD_SKU_ID, ITEM_PICKUP, ORDER_FULFILLED, ORDER_OPENED, READY_FOR_PICKUP, SHIPMENT_WORKFLOW_STATUS_CHANGED } from "./constants";
 import { Customers } from "./Customers";
 import { Orders } from "./Orders";
+import { getShipmentDetailsById } from "./Shipments";
 
 export const EVENTS_MAPPED = [
     {
@@ -12,16 +13,13 @@ export const EVENTS_MAPPED = [
     {
         status: 'order.fulfilled',
     }
-
-
-
 ]
 
 interface Event {
     eventId: string;
     extendedProperties?: ExtendedProperties[];
     topic: string;
-    entityId: string;
+    entityId: any;
     timestamp: string;
     correlationId: string;
     isTest: boolean;
@@ -32,10 +30,31 @@ interface ExtendedProperties {
     value: string
 }
 
+function mergeCancelledItems(cancelArray: any, fullArray: any) {
+    return cancelArray.map((cancelItem: any) => {
+        const match = fullArray.find((fullItem: any) =>
+            fullItem.product.productCode === cancelItem.productCode &&
+            fullItem.product.variationProductCode === cancelItem.variationProductCode &&
+            fullItem.product.upc === cancelItem.upc
+        );
+
+        if (match) {
+            // Clone the match to avoid mutating original array
+            const mergedItem = { ...match };
+            mergedItem.quantity = cancelItem.quantity;
+            return mergedItem;
+        }
+
+        // Optionally return null or skip if no match
+        return null;
+    }).filter((item: any) => item !== null); // Remove unmatched items
+}
+
 export const sendNotification = async (event: Event) => {
 
     const Order = new Orders();
     const Customer = new Customers();
+    let isGiftCard = false
     let orderId = event.entityId || "";
 
     let isReadyForPickup = false;
@@ -56,6 +75,21 @@ export const sendNotification = async (event: Event) => {
     const customerAccountId = orderDetails.customerAccountId;
     const customer = await Customer.getCustomer(customerAccountId!);
 
+    if (event.topic === SHIPMENT_WORKFLOW_STATUS_CHANGED) {
+        const Shipment = await getShipmentDetailsById(event.entityId);
+        isGiftCard = Shipment?.items?.some((item: any) => item?.variationProductCode == DIGITAL_GIFT_CARD_SKU_ID)
+        console.log("isGiftCard", isGiftCard)
+        const updatedArray = mergeCancelledItems(Shipment?.items, orderDetails.items);
+        updatedArray?.filter((item: any) => {
+            if (item?.data?.['egifter-data']?.isPromotional === true) {
+                isGiftCard = true
+            }
+        });
+    }
+
+    if (isGiftCard) {
+        return
+    }
     const getdeviceId = () => {
         const deviceObjOrder: any = orderDetails?.attributes?.find(item => item.fullyQualifiedName?.toLowerCase() === ('Tenant~DeviceAppToken').toLowerCase());
         if (deviceObjOrder) {
@@ -77,11 +111,8 @@ export const sendNotification = async (event: Event) => {
     console.log(deviceId, ": Device Id")
 
     const customerFirstName = customer.firstName;
-    const isGiftCard = orderDetails?.items?.some((item: any) => item?.product?.variationProductCode == DIGITAL_GIFT_CARD_SKU_ID)
-    if (isGiftCard) {
-        return null;
-    }
-    
+
+
     if (!deviceId) {
         return null;
     }
