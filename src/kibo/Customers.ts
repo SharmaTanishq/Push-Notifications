@@ -1,7 +1,7 @@
 import { KiboClient } from './KiboClient';
 
 import { CustomerAccountApi } from '@kibocommerce/rest-sdk/clients/Customer/apis/CustomerAccountApi';
-
+import logger from '../logger';
 const client = new CustomerAccountApi(KiboClient);
 
 export class Customers {
@@ -16,7 +16,7 @@ export class Customers {
             });
             return response;
         } catch (error) {
-            console.error('Error fetching customer:', error);
+            logger.error('Error fetching customer:', error);
             throw error;
         }
     }

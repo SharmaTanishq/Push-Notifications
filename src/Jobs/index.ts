@@ -2,12 +2,13 @@ import schedule from "node-schedule";
 import { getBopisShipments, getBopisShipments5Days } from "../kibo/Shipments";
 
 import { sendNotification } from "./sendNotifications";
+import logger from "../logger";
 
 export const initializeScheduler = async () => {
   // Schedule job to run every 4 hours
-  const job = schedule.scheduleJob(process.env.REMINDER_TIME!, async () => {
+  schedule.scheduleJob(process.env.REMINDER_TIME!, async () => {
     try {
-      console.log("Running BOPIS shipment check:", new Date().toISOString());
+      logger.info("Running BOPIS shipment check:", new Date().toISOString());
 
       const response = (await getBopisShipments()) as any;
 
@@ -21,9 +22,7 @@ export const initializeScheduler = async () => {
             processedOrderIds.add(shipment.orderId);
           }
         }
-        console.log(
-          `Found ${processedOrderIds.size} unique BOPIS orders to process`
-        );
+     
       }
 
       if (response && response.length > 0) {
@@ -31,26 +30,26 @@ export const initializeScheduler = async () => {
         for (const orderId of processedOrderIds) {
           try {
             await sendNotification(orderId, false).catch((error) => {
-              console.error(`Error sending reminder Notification: ${error}`);
+              logger.error(`Error sending reminder Notification: ${error}`);
             });
             // console.log('Notifications sent:', response);
           } catch (error) {
-            console.error(`Error processing shipment ${orderId}:`, error);
+            logger.error(`Error processing shipment ${orderId}:`, error);
           }
         }
       } else {
-        console.log("No BOPIS shipments found or invalid response structure");
+        logger.info("No BOPIS shipments found or invalid response structure");
       }
     } catch (error) {
-      console.error("Error in BOPIS shipment scheduler:", error);
+      logger.error("Error in BOPIS shipment scheduler:", error);
     }
   });
 
-  const job5Days = schedule.scheduleJob(
+  schedule.scheduleJob(
     process.env.REMINDER_TIME!,
     async () => {
       try {
-        console.log("Running BOPIS shipment check:", new Date().toISOString());
+        logger.info("Running BOPIS shipment check:", new Date().toISOString());
 
         const response = (await getBopisShipments5Days()) as any;
 
@@ -64,7 +63,7 @@ export const initializeScheduler = async () => {
               processedOrderIds.add(shipment.orderId);
             }
           }
-          console.log(
+          logger.info(
             `Found ${processedOrderIds.size} unique BOPIS orders to process`
           );
         }
@@ -74,23 +73,22 @@ export const initializeScheduler = async () => {
           for (const orderId of processedOrderIds) {
             try {
               await sendNotification(orderId, true).catch((error) => {
-                console.error(`Error sending reminder Notification: ${error}`);
+                logger.error(`Error sending reminder Notification: ${error}`);
               });
               // console.log('Notification sent:', response);
             } catch (error) {
-              console.error(`Error processing shipment ${orderId}:`, error);
+              logger.error(`Error processing shipment ${orderId}:`, error);
             }
           }
         } else {
-          console.log("No BOPIS shipments found or invalid response structure");
+          logger.info("No BOPIS shipments found or invalid response structure");
         }
       } catch (error) {
-        console.error("Error in BOPIS shipment scheduler:", error);
+        logger.error("Error in BOPIS shipment scheduler:", error);
       }
     }
   );
 
   // Run immediately on startup
-  job?.invoke();
-  job5Days?.invoke();
+  // Jobs will run according to their scheduled times, not immediately on startup
 };

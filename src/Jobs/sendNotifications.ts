@@ -1,6 +1,7 @@
 import { messaging } from "../config/firebase";
 import { Customers } from "../kibo/Customers";
 import { Orders } from "../kibo/Orders";
+import logger from "../logger";
 
 export const sendNotification = async (orderId: string, is5Days: Boolean) => {
   const Order = new Orders();
@@ -33,8 +34,7 @@ export const sendNotification = async (orderId: string, is5Days: Boolean) => {
   };
 
   const deviceId = getdeviceId();
-  console.log(deviceId, ": Device Id");
-  console.log("Customer", customer.firstName);
+  
 
   if (!deviceId) {
     throw new Error("No device id found");
@@ -51,16 +51,16 @@ export const sendNotification = async (orderId: string, is5Days: Boolean) => {
     token: deviceId,
   };
 
-  console.log("Message", message.notification.title);
+  
 
   await messaging
     .send(message)
     .then((response) => {
-      console.log("response", response);
+      
       return 200;
     })
     .catch((error) => {
-      console.log("error", error);
+      logger.error("error", error);
       throw new Error("Error sending notification");
     });
 

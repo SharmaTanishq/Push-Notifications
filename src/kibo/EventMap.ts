@@ -75,7 +75,7 @@ export const sendNotification = async (event: Event) => {
         await getShipmentDetailsById(event.entityId).then(response => {
             isBOPIS = response?.shipmentType === "BOPIS";
             isGiftCard = response?.items?.some((item: any) => item?.variationProductCode == DIGITAL_GIFT_CARD_SKU_ID)
-            console.log("isGiftCard", isGiftCard)
+            
             const updatedArray = mergeCancelledItems(response?.items, orderDetails.items);
             updatedArray?.filter((item: any) => {
                 if (item?.data?.['egifter-data']?.isPromotional === true) {
@@ -108,9 +108,9 @@ export const sendNotification = async (event: Event) => {
 
 
     const deviceId = getdeviceId()
-    // const deviceId = "efKYwO_mRj-2OCr670kGE8:APA91bFG09OQu39B0-CVnqI9U_XjxWnVrZeXlQC6aCHN8VWd5I6-YrlCrTUgj-iKJiiBZM4_lryemP5gIhqsvvL6HInRpTXakCreksPxIeMTvwWo_q6qY-8"
+    
 
-    console.log(deviceId, ": Device Id")
+    
 
     const customerFirstName = customer.firstName;
 

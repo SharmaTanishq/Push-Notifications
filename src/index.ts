@@ -4,13 +4,13 @@ import { sendNotification } from "./kibo/EventMap";
 import { pushToDB } from "./utils/PushToDB";
 import dotenv from "dotenv";
 import { initializeScheduler } from "./Jobs";
-
+import logger from "./logger";
 // Load environment variables
 dotenv.config({ path: "/Users/tanishqsharma/Desktop/Work/Skillnet/Kibo-Commerce/Push-Notifications/.env.uat" });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-console.log(process.env.PORT, "PORT")
+
 // Create routers
 const apiRouter = Router();
 const healthRouter = Router();
@@ -40,7 +40,7 @@ eventRouter.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const event = req.body;
-      console.log("Received event:", event);
+      
 
       const data = await sendNotification(event);
 
@@ -65,7 +65,7 @@ eventRouter.post(
           message
         );
         
-          console.log("response",response);
+          
 
         // Store in database
          await pushToDB(data);
@@ -76,7 +76,7 @@ eventRouter.post(
           data: data,
         });
       } catch (error) {
-        console.error("Error sending notification:", error);
+        logger.error("Error sending notification:", error);
 
         // Still try to push to DB with error flag
         await pushToDB(data, "errored");
@@ -100,7 +100,7 @@ app.use("/", apiRouter);
 
 // Global error handler middleware
 app.use((err: ApiError, req: Request, res: Response, next: NextFunction) => {
-  console.error("Error occurred:", err);
+  logger.error("Error occurred:", err);
 
   const statusCode = err.statusCode || 500;
   const message = err.message || "Internal Server Error";
@@ -120,21 +120,23 @@ app.use((req: Request, res: Response) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`API base URL: http://localhost:${PORT}`);
+  
+  
+  logger.info(`API base URL: http://localhost:${PORT}`);
   
   if(process.env.SCHEDULER_RUNNING === "true"){
+    logger.info("Initializing scheduler", process.env.SCHEDULER_RUNNING);
     initializeScheduler();
   }
 });
 
 // Handle uncaught exceptions and unhandled promise rejections
 process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
+  logger.error("Uncaught Exception:", error);
   // In a production environment, you might want to gracefully shut down
   // process.exit(1);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Promise Rejection:", reason);
+  logger.error("Unhandled Promise Rejection:", reason);
 });

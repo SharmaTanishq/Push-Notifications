@@ -1,6 +1,6 @@
 import { KiboClient } from './KiboClient';
 import { OrderApi } from '@kibocommerce/rest-sdk/clients/Commerce';
-
+import logger from '../logger';
 
 const client = new OrderApi(KiboClient);
 export class Orders {
@@ -13,7 +13,7 @@ export class Orders {
             });
             return response;
         } catch (error) {
-            console.error('Error fetching order:', error);
+            logger.error('Error fetching order:', error);
             throw error;
         }
     }
