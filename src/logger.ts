@@ -4,7 +4,7 @@ import { config } from "./config";
 import 'winston-daily-rotate-file';
 
 const transport = new winston.transports.DailyRotateFile({
-    filename: `${config.LOG_DIR_PATH}/push-notifications-logs/` + 'push-notifications-%DATE%.log',
+    filename: `${config.LOG_DIR_PATH || '../logs'}/push-notifications-logs/` + 'push-notifications-%DATE%.log',
     datePattern: 'YYYY-MM-DD',
     //zippedArchive: true,
     maxSize: '20m',
